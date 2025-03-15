@@ -15,7 +15,7 @@ int main()
     badger.pen(15);
     badger.clear();
     badger.pen(0);
-    badger.text("Badger2040 Initialized", 0, 0, 2.0F);
+    badger.text("Init ChoiceStory v0.2", 0, 0, 2.0F);
     badger.update();
 
     while (true) {
