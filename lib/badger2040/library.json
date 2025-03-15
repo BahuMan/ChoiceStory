@@ -1,0 +1,18 @@
+{
+    "name": "Badger2040",
+    "version": "0.0.1",
+    "keywords": "rp2040, pimoroni, badger, Badger2040, eink",
+    "description": "pimoroni Badger2040 lib inside PlatformIO",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pimoroni/pimoroni-pico/tree/main"
+    },
+    "frameworks": "arduino",
+    "platforms": "pico, https://github.com/maxgerhardt/platform-raspberrypi.git",
+    "build": {
+        "libArchive": false,
+		"flags": [
+			"-I."
+		]
+    }
+}
