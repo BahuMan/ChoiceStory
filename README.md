@@ -11,4 +11,7 @@ any text editor to create extra chapters in the adventure.
 
 The badge:
 [https://shop.pimoroni.com/products/badger-2040]
+
+after cloning this project, use git to retrieve littlefs submodule:
+`git submodule update --init`
  
