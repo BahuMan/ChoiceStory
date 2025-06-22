@@ -34,16 +34,13 @@ project(ChoiceStory C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-add_subdirectory(badger2040)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vendor/badger2040)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vendor/hiroyuki)
 
 add_executable(ChoiceStory
   main.cpp
-  littlefs_driver.c
-  usb_msc_driver.c
-  usb_descriptors.c
-  mimic_fat.c
-  unicode.c
 )
+
 target_link_libraries(ChoiceStory PRIVATE
   hardware_flash
   hardware_sync
@@ -53,28 +50,17 @@ target_link_libraries(ChoiceStory PRIVATE
   tinyusb_board
   tinyusb_device
   badger2040
+  hiroyuki
 )
 
 target_include_directories(ChoiceStory
   PRIVATE
   vendor/littlefs
   ${CMAKE_CURRENT_LIST_DIR}/include
-  ${CMAKE_CURRENT_LIST_DIR}/badger2040
+  ${CMAKE_CURRENT_LIST_DIR}/vendor/badger2040
 )
 target_compile_options(ChoiceStory PRIVATE -Werror -Wall -Wextra -Wnull-dereference)
 target_link_options(ChoiceStory PRIVATE -Wl,--print-memory-usage)
-
-
-add_library(littlefs INTERFACE)
-target_sources(littlefs INTERFACE
-  vendor/littlefs/lfs.c
-  vendor/littlefs/lfs_util.c
-)
-target_include_directories(littlefs INTERFACE
-  vendor/littlefs
-)
-target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
-target_link_libraries(littlefs INTERFACE hardware_flash)
 
 pico_enable_stdio_usb(ChoiceStory 1)
 pico_add_extra_outputs(ChoiceStory)
