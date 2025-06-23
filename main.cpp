@@ -22,14 +22,7 @@ extern const struct lfs_config lfs_pico_flash_config;  // littlefs_driver.c
 
 #define FILENAME  "SENSOR.TXT"
 
-#define README_TXT \
-"Raspberry Pi Pico littlefs USB Flash Memory Interface\n" \
-"\n" \
-"Every time you press the BOOTSEL button on the Raspberry Pi Pico,\n" \
-"append a log to the littlefs `SENSOR.TXT`. The host PC can mount\n" \
-"the Pico like a USB Mass storage class flash memory device and\n" \
-"read `SENSOR.TXT`.\n" \
-"Hold the button down for 10 seconds to format Pico's flash memory.\n"
+#include "defaultstory.h"
 
 #define ANSI_RED "\e[31m"
 #define ANSI_CLEAR "\e[0m"
@@ -48,8 +41,8 @@ static void test_filesystem_and_format_if_necessary(bool force_format) {
         lfs_mount(&fs, &lfs_pico_flash_config);
 
         lfs_file_t f;
-        lfs_file_open(&fs, &f, "README.TXT", LFS_O_RDWR|LFS_O_CREAT);
-        lfs_file_write(&fs, &f, README_TXT, strlen(README_TXT));
+        lfs_file_open(&fs, &f, "MANUAL.TXT", LFS_O_RDWR|LFS_O_CREAT);
+        lfs_file_write(&fs, &f, DEFAULT_STORY, strlen(DEFAULT_STORY));
         lfs_file_close(&fs, &f);
 
         if (mimic_fat_usb_device_is_enabled()) {
@@ -93,6 +86,7 @@ static void sensor_logging_task(void) {
         long_push = 0;
     }
 }
+pimoroni::Badger2040 badger;
 
 int main(void) {
     //set_sys_clock_khz(250000, false);
@@ -100,8 +94,30 @@ int main(void) {
     board_init();
     tud_init(BOARD_TUD_RHPORT);
     stdio_init_all();
+    badger.init();
 
     test_filesystem_and_format_if_necessary(false);
+
+    badger.update_speed(1);
+    badger.font("bitmap8");
+    badger.pen(15);
+    badger.clear();
+    badger.pen(0);
+    badger.text("Init ChoiceStory v0.6", 0, 0, 1.0F);
+    lfs_dir_t dir;
+    if (lfs_dir_open(&fs, &dir, "/") < 0) {
+        badger.text("error opening root", 0, 20, 1.0F);
+    }
+    else {
+        lfs_info info;
+        int y = 20;
+        while (lfs_dir_read(&fs, &dir, &info) > 0) {
+            badger.text(info.name, 10, y, 1.0F);
+            y += 8;
+        }
+    }
+    badger.update();
+
     while (true) {
         sensor_logging_task();
         tud_task();
