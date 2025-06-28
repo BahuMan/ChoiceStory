@@ -46,7 +46,7 @@ static uint8_t fat_disk_image[1][DISK_SECTOR_SIZE] = {
       0x00, // BS_Reserved
       0x29, // BS_BootSig
       0x34, 0x12, 0x00, 0x00, // BS_VolID
-      'l' , 'i' , 't' , 't' , 'l' , 'e' , 'f' , 's' , 'U' , 'S' , 'B' , // BS_VolLab
+      'C' , 'h' , 'o' , 'i' , 'c' , 'e' , 'f' , 's' , 'U' , 'S' , 'B' , // BS_VolLab
       0x46, 0x41, 0x54, 0x31, 0x32, 0x20, 0x20, 0x20, // BS_FilSysType
       0x00, 0x00,
       // Zero up to 2 last bytes of FAT magic code

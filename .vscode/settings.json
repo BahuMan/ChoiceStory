@@ -38,6 +38,7 @@
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
     "files.associations": {
         "tusb.h": "c",
-        "pimoroni_common.hpp": "c"
+        "pimoroni_common.hpp": "c",
+        "mimic_fat.h": "c"
     }
 }

@@ -39,6 +39,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vendor/hiroyuki)
 
 add_executable(ChoiceStory
   main.cpp
+  ChooseFile.cpp
+  ReadStory.cpp
 )
 
 target_link_libraries(ChoiceStory PRIVATE

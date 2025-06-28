@@ -57,6 +57,7 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buff
     (void)offset;
 
     if (!is_initialized) {
+        printf("tud_msc_read10_cb initializing mimic");
         mimic_fat_init(&lfs_pico_flash_config);
         mimic_fat_update_usb_device_is_enabled(true);
         mimic_fat_create_cache();

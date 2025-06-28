@@ -17,7 +17,7 @@ extern "C" {
 }
 #include "common/pimoroni_common.hpp"
 #include "badger2040.hpp"
-
+#include "ChooseFile.hpp"
 extern const struct lfs_config lfs_pico_flash_config;  // littlefs_driver.c
 
 #include "defaultstory.h"
@@ -27,6 +27,7 @@ extern const struct lfs_config lfs_pico_flash_config;  // littlefs_driver.c
 
 
 lfs_t fs;
+pimoroni::Badger2040 badger;
 
 /*
  * Format the file system if it does not exist
@@ -60,6 +61,7 @@ static void sensor_logging_task(void) {
 
     if (last_status != button && button) {  // Push BOOTSEL button
         //this was where the counter was written to file SENSOR.TXT
+        printf("BOOT pressed");
     }
     last_status = button;
 
@@ -73,22 +75,13 @@ static void sensor_logging_task(void) {
         long_push = 0;
     }
 }
-pimoroni::Badger2040 badger;
-extern "C" {
-    bool ejected;
-    bool is_initialized;
-}
-static bool was_ejected = true;
-static bool was_initialized = false;
 
-void show_status() {
-    badger.pen(15);
-    badger.rectangle(0, 100, 296, 28);
-    badger.pen(0);
-    badger.text(ejected? "ejected":"connected", 20, 100, 1.0F);
-    badger.text(is_initialized? "initialized":"?????", 150, 100, 1.0F);
+enum activity {
+    CHOOSING_FILE,
+    READING_STORY
+};
 
-}
+static activity current_activity = CHOOSING_FILE;
 int main(void) {
     //set_sys_clock_khz(250000, false);
 
@@ -99,37 +92,58 @@ int main(void) {
 
     test_filesystem_and_format_if_necessary(false);
 
-    badger.update_speed(1);
+    badger.update_speed(0);
     badger.font("bitmap8");
     badger.pen(15);
     badger.clear();
     badger.pen(0);
-    badger.text("Init ChoiceStory v0.7", 0, 0, 1.0F);
+    badger.text("Init ChoiceStory v0.7", 0, 0, 2.0F);
     lfs_dir_t dir;
-    if (lfs_dir_open(&fs, &dir, "/") < 0) {
-        badger.text("error opening root", 0, 20, 1.0F);
-    }
-    else {
+    int file_count = 0;
+    if (lfs_dir_open(&fs, &dir, "/") >= 0) {
         lfs_info info;
-        int y = 20;
+        // First pass: count files
         while (lfs_dir_read(&fs, &dir, &info) > 0) {
-            if (strcmp(info.name, "..") == 0 ) continue;
-            if (strcmp(info.name, ".") == 0 ) continue;
-            badger.text(info.name, 10, y, 1.0F);
-            y += 8;
+            if (strcmp(info.name, "..") == 0) continue;
+            if (strcmp(info.name, ".") == 0) continue;
+            file_count++;
         }
+        lfs_dir_close(&fs, &dir);
     }
-    show_status();
+    // Allocate filelist
+    char **filelist = nullptr;
+    if (file_count > 0) {
+        filelist = (char**)malloc(sizeof(char*) * file_count);
+        lfs_dir_open(&fs, &dir, "/");
+        lfs_info info;
+        int idx = 0;
+        while (lfs_dir_read(&fs, &dir, &info) > 0 && idx < file_count) {
+            if (strcmp(info.name, "..") == 0) continue;
+            if (strcmp(info.name, ".") == 0) continue;
+            filelist[idx] = strdup(info.name);
+            idx++;
+        }
+        lfs_dir_close(&fs, &dir);
+    }
+    ChooseFile chooser(filelist, file_count);
     badger.update();
 
     while (true) {
         sensor_logging_task();
         tud_task();
-        if (was_ejected != ejected || was_initialized != is_initialized) {
-            show_status();
-            badger.update();
-            was_ejected = ejected;
-            was_initialized = is_initialized;
+        char *chosen_file = nullptr;
+        badger.update_button_states();
+        switch (current_activity)
+        {
+        case CHOOSING_FILE:
+            chosen_file = chooser.chosen();
+            if (chosen_file) {
+                current_activity = READING_STORY;
+            }
+            break;
+        
+        default:
+            break;
         }
     }
 }
