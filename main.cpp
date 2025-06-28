@@ -20,8 +20,6 @@ extern "C" {
 
 extern const struct lfs_config lfs_pico_flash_config;  // littlefs_driver.c
 
-#define FILENAME  "SENSOR.TXT"
-
 #include "defaultstory.h"
 
 #define ANSI_RED "\e[31m"
@@ -57,21 +55,11 @@ static void test_filesystem_and_format_if_necessary(bool force_format) {
  */
 static void sensor_logging_task(void) {
     static bool last_status = false;
-    static int count = 0;
     bool button = bb_get_bootsel_button();
     static uint64_t long_push = 0;
 
     if (last_status != button && button) {  // Push BOOTSEL button
-        count += 1;
-        printf("Update %s\n", FILENAME);
-
-        lfs_file_t f;
-        lfs_file_open(&fs, &f, FILENAME, LFS_O_RDWR|LFS_O_APPEND|LFS_O_CREAT);
-        uint8_t buffer[512];
-        snprintf((char *)buffer, sizeof(buffer), "click=%d\n", count);
-        lfs_file_write(&fs, &f, buffer, strlen((char *)buffer));
-        printf((char *)buffer);
-        lfs_file_close(&fs, &f);
+        //this was where the counter was written to file SENSOR.TXT
     }
     last_status = button;
 
@@ -82,12 +70,25 @@ static void sensor_logging_task(void) {
     }
     if (long_push > 35000) { // Long-push BOOTSEL button
         test_filesystem_and_format_if_necessary(true);
-        count = 0;
         long_push = 0;
     }
 }
 pimoroni::Badger2040 badger;
+extern "C" {
+    bool ejected;
+    bool is_initialized;
+}
+static bool was_ejected = true;
+static bool was_initialized = false;
 
+void show_status() {
+    badger.pen(15);
+    badger.rectangle(0, 100, 296, 28);
+    badger.pen(0);
+    badger.text(ejected? "ejected":"connected", 20, 100, 1.0F);
+    badger.text(is_initialized? "initialized":"?????", 150, 100, 1.0F);
+
+}
 int main(void) {
     //set_sys_clock_khz(250000, false);
 
@@ -103,7 +104,7 @@ int main(void) {
     badger.pen(15);
     badger.clear();
     badger.pen(0);
-    badger.text("Init ChoiceStory v0.6", 0, 0, 1.0F);
+    badger.text("Init ChoiceStory v0.7", 0, 0, 1.0F);
     lfs_dir_t dir;
     if (lfs_dir_open(&fs, &dir, "/") < 0) {
         badger.text("error opening root", 0, 20, 1.0F);
@@ -112,14 +113,23 @@ int main(void) {
         lfs_info info;
         int y = 20;
         while (lfs_dir_read(&fs, &dir, &info) > 0) {
+            if (strcmp(info.name, "..") == 0 ) continue;
+            if (strcmp(info.name, ".") == 0 ) continue;
             badger.text(info.name, 10, y, 1.0F);
             y += 8;
         }
     }
+    show_status();
     badger.update();
 
     while (true) {
         sensor_logging_task();
         tud_task();
+        if (was_ejected != ejected || was_initialized != is_initialized) {
+            show_status();
+            badger.update();
+            was_ejected = ejected;
+            was_initialized = is_initialized;
+        }
     }
 }
