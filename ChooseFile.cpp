@@ -48,6 +48,10 @@ char * ChooseFile::chosen() {
         }
     }
 
+    if (upPressed || downPressed || selectPressed) {
+        sleep_ms(100); // debounce delay
+    }
+    
     if (selectPressed) {
         printf("select %s pressed\n", fileList[currentFile]);
         return fileList[currentFile];

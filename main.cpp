@@ -18,6 +18,8 @@ extern "C" {
 #include "common/pimoroni_common.hpp"
 #include "badger2040.hpp"
 #include "ChooseFile.hpp"
+#include "ReadStory.hpp"
+
 extern const struct lfs_config lfs_pico_flash_config;  // littlefs_driver.c
 
 #include "defaultstory.h"
@@ -126,6 +128,7 @@ int main(void) {
         lfs_dir_close(&fs, &dir);
     }
     ChooseFile chooser(filelist, file_count);
+    ReadStory reader;
     badger.update();
 
     while (true) {
@@ -139,11 +142,18 @@ int main(void) {
             chosen_file = chooser.chosen();
             if (chosen_file) {
                 current_activity = READING_STORY;
+                reader.read(chosen_file);
             }
             break;
-        
-        default:
+        case READING_STORY:
+            if (reader.finished()) {
+                // Finished reading, go back to choosing file
+                current_activity = CHOOSING_FILE;
+            }
             break;
+        default:
+            printf("invalid activity %d\n", current_activity);
+            sleep_ms(1000);
         }
     }
 }
