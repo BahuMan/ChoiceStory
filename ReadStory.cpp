@@ -74,8 +74,12 @@ bool ReadStory::finished() {
 bool ReadStory::showStory() {
     badger.text(currentStoryText, 0, 0, 2.0F);
     printf("Showing story text: %s\n", currentStoryText);
-    badger.rectangle(0, 112, 296, 16); // clear the options area
-    badger.pen(15); // set pen color to white for text
+
+    badger.rectangle(0, 110, 296, 18); // clear the options area
+    badger.pen(15); // set pen color to white for separators and text
+    badger.rectangle(96, 110, 2, 18);
+    badger.rectangle(196, 110, 2, 18);
+
     badger.text(optionADisplay, 0, 112, 2.0F);
     badger.text(optionBDisplay, 100, 112, 2.0F);
     badger.text(optionCDisplay, 200, 112, 2.0F);
