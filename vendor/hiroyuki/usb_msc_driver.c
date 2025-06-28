@@ -16,9 +16,9 @@ static bool is_initialized = false;
 void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4]) {
     (void)lun;
 
-    const char vid[] = "littlefs";
-    const char pid[] = "Mass Storage";
-    const char rev[] = "1.0";
+    const char vid[] = "Choice";
+    const char pid[] = "Story Container";
+    const char rev[] = "0.1";
 
     memcpy(vendor_id  , vid, strlen(vid));
     memcpy(product_id , pid, strlen(pid));
